@@ -1,0 +1,38 @@
+erDiagram
+  telemetry_events {
+    text telemetry_id PK
+    text organization_id
+    text site_id
+    text source
+    text message_id
+    text device_id
+    text point_key
+    jsonb value_json
+    text unit
+    timestamptz observed_at
+    text payload_hash
+    timestamptz received_at
+    timestamptz created_at
+  }
+
+  dead_letters {
+    text dead_letter_id PK
+    text organization_id
+    text site_id
+    text protocol
+    text topic
+    text reason
+    jsonb payload_json
+    timestamptz received_at
+    timestamptz created_at
+  }
+
+  outbox_events {
+    text event_id PK
+    text aggregate_type
+    text aggregate_id
+    text event_type
+    jsonb payload_json
+    timestamptz created_at
+    timestamptz published_at
+  }

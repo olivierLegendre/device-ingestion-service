@@ -1,0 +1,62 @@
+[
+  {
+    "name": "zigbee_happy_path",
+    "request": {
+      "organization_id": "org-golden",
+      "site_id": "site-golden",
+      "protocol": "zigbee2mqtt",
+      "topic": "zigbee2mqtt/room-101",
+      "payload": {
+        "message_id": "golden-zb-1",
+        "timestamp": "2026-03-10T09:00:00Z",
+        "temperature": 22.1,
+        "humidity": 40
+      }
+    },
+    "expected_summary": {
+      "accepted": 2,
+      "duplicate": 0,
+      "dead_letter": 0
+    },
+    "expected_statuses": ["accepted", "accepted"]
+  },
+  {
+    "name": "zigbee_duplicate",
+    "request": {
+      "organization_id": "org-golden",
+      "site_id": "site-golden",
+      "protocol": "zigbee2mqtt",
+      "topic": "zigbee2mqtt/room-101",
+      "payload": {
+        "message_id": "golden-zb-1",
+        "timestamp": "2026-03-10T09:00:00Z",
+        "temperature": 22.1,
+        "humidity": 40
+      }
+    },
+    "expected_summary": {
+      "accepted": 0,
+      "duplicate": 2,
+      "dead_letter": 0
+    },
+    "expected_statuses": ["duplicate", "duplicate"]
+  },
+  {
+    "name": "unsupported_protocol_dead_letter",
+    "request": {
+      "organization_id": "org-golden",
+      "site_id": "site-golden",
+      "protocol": "unknown",
+      "topic": "unknown/topic",
+      "payload": {
+        "value": 1
+      }
+    },
+    "expected_summary": {
+      "accepted": 0,
+      "duplicate": 0,
+      "dead_letter": 1
+    },
+    "expected_statuses": ["dead_letter"]
+  }
+]
