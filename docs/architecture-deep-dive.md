@@ -103,6 +103,10 @@ Tables:
 
 ### 6.1 ER diagram (Mermaid)
 
+Source: `docs/diagrams/schema-er.mmd`  
+SVG export target: `docs/diagrams/schema-er.svg`  
+Export command: `./scripts/export_diagrams.sh`
+
 ```mermaid
 erDiagram
   telemetry_events {
