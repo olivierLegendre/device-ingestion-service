@@ -78,3 +78,54 @@ def test_postgres_ingestion_roundtrip(monkeypatch: pytest.MonkeyPatch) -> None:
     rows = dead_letters.json()
     assert rows
     assert rows[0]["reason"] in {"unprocessablepayload", "invalidpayload"}
+
+
+@pytest.mark.postgres_integration
+def test_postgres_dead_letter_scope_isolation(monkeypatch: pytest.MonkeyPatch) -> None:
+    dsn = os.getenv("DEVICE_INGESTION_TEST_POSTGRES_DSN")
+    if not dsn:
+        pytest.skip("DEVICE_INGESTION_TEST_POSTGRES_DSN is not set")
+
+    monkeypatch.setenv("DEVICE_INGESTION_PERSISTENCE_BACKEND", "postgres")
+    monkeypatch.setenv("DEVICE_INGESTION_POSTGRES_DSN", dsn)
+    monkeypatch.setenv("DEVICE_INGESTION_POSTGRES_AUTO_INIT", "true")
+
+    client = TestClient(create_app())
+
+    dead = client.post(
+        "/api/v1/ingestion/events",
+        json={
+            "organization_id": "org-a",
+            "site_id": "site-a",
+            "protocol": "lorawan",
+            "topic": "lorawan/device-a",
+            "payload": {
+                "message_id": "dead-tenant-a",
+                "decoded_payload": {"battery": 91},
+            },
+        },
+    )
+    assert dead.status_code == 202
+    assert dead.json()["summary"]["dead_letter"] == 1
+    dead_letter_id = dead.json()["items"][0]["dead_letter_id"]
+
+    list_ok = client.get(
+        "/api/v1/ingestion/dead-letters",
+        params={"organization_id": "org-a", "site_id": "site-a", "limit": 10},
+    )
+    assert list_ok.status_code == 200
+    assert any(row["dead_letter_id"] == dead_letter_id for row in list_ok.json())
+
+    list_wrong_org = client.get(
+        "/api/v1/ingestion/dead-letters",
+        params={"organization_id": "org-b", "site_id": "site-a", "limit": 10},
+    )
+    assert list_wrong_org.status_code == 200
+    assert list_wrong_org.json() == []
+
+    list_wrong_site = client.get(
+        "/api/v1/ingestion/dead-letters",
+        params={"organization_id": "org-a", "site_id": "site-b", "limit": 10},
+    )
+    assert list_wrong_site.status_code == 200
+    assert list_wrong_site.json() == []
