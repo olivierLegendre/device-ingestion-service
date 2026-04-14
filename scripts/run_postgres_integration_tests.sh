@@ -6,24 +6,25 @@ cd "$REPO_DIR"
 
 source .venv/bin/activate
 
-cleanup() {
-  docker compose -f docker-compose.postgres.yml down -v >/dev/null 2>&1 || true
-}
-trap cleanup EXIT
+IOT_SERVICES_ROOT="${IOT_SERVICES_ROOT:-$(cd "${REPO_DIR}/.." && pwd)}"
+FOUNDATION_DIR="${FOUNDATION_DIR:-${IOT_SERVICES_ROOT}/platform-foundation}"
+FOUNDATION_SCRIPTS_DIR="${FOUNDATION_DIR}/deploy/production/scripts"
+POSTGRES_SHARED_ENV_FILE="${POSTGRES_SHARED_ENV_FILE:-${FOUNDATION_SCRIPTS_DIR}/postgres-shared.env}"
+export POSTGRES_SHARED_ENV_FILE
 
-docker compose -f docker-compose.postgres.yml up -d
+"${FOUNDATION_SCRIPTS_DIR}/run_shared_postgres_cluster.sh" up
+"${FOUNDATION_SCRIPTS_DIR}/provision_shared_postgres.sh" --service device-ingestion-service --reset-db
 
-for _ in {1..40}; do
-  if docker exec device-ingestion-postgres pg_isready -U postgres -d device_ingestion >/dev/null 2>&1; then
-    break
-  fi
-  sleep 1
-done
-
-if ! docker exec device-ingestion-postgres pg_isready -U postgres -d device_ingestion >/dev/null 2>&1; then
-  echo "PostgreSQL did not become ready in time." >&2
-  exit 1
+if [[ -f "${POSTGRES_SHARED_ENV_FILE}" ]]; then
+  # shellcheck disable=SC1090
+  source "${POSTGRES_SHARED_ENV_FILE}"
 fi
 
-export DEVICE_INGESTION_TEST_POSTGRES_DSN="postgresql://postgres:postgres@localhost:55433/device_ingestion"
+DB_HOST="${POSTGRES_CLUSTER_HOST:-localhost}"
+DB_PORT="${POSTGRES_CLUSTER_PORT:-55440}"
+DB_NAME="${DEVICE_INGESTION_DB_NAME:-device_ingestion}"
+DB_USER="${DEVICE_INGESTION_MIGRATOR_ROLE:-svc_device_ingestion_migrator}"
+DB_PASSWORD="${DEVICE_INGESTION_MIGRATOR_PASSWORD:-dev_device_ingestion_migrator}"
+
+export DEVICE_INGESTION_TEST_POSTGRES_DSN="postgresql://${DB_USER}:${DB_PASSWORD}@${DB_HOST}:${DB_PORT}/${DB_NAME}"
 pytest -m postgres_integration -q

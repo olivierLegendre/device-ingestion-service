@@ -32,7 +32,7 @@ source .venv/bin/activate
 ## Run API
 
 ```bash
-export DEVICE_INGESTION_POSTGRES_DSN='postgresql://postgres:postgres@localhost:5432/device_ingestion'
+export DEVICE_INGESTION_POSTGRES_DSN='postgresql://svc_device_ingestion_app:dev_device_ingestion_app@localhost:55440/device_ingestion'
 uvicorn device_ingestion_service.main:app --reload
 ```
 
@@ -65,6 +65,11 @@ PostgreSQL integration tests:
 ```bash
 ./scripts/run_postgres_integration_tests.sh
 ```
+
+Shared Postgres dependency:
+
+- The integration script uses `platform-foundation` shared cluster provisioning (no local per-service Postgres container).
+- Optional env override: `POSTGRES_SHARED_ENV_FILE=/path/to/postgres-shared.env`.
 
 Golden compatibility fixture regression:
 
