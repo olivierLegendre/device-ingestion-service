@@ -14,3 +14,8 @@ __pycache__/
 node_modules/
 .next/
 dist/
+
+# Python packaging artifacts
+*.egg-info/
+*.egg
+.eggs/
