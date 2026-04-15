@@ -23,8 +23,13 @@ fi
 DB_HOST="${POSTGRES_CLUSTER_HOST:-localhost}"
 DB_PORT="${POSTGRES_CLUSTER_PORT:-55440}"
 DB_NAME="${DEVICE_INGESTION_DB_NAME:-device_ingestion}"
-DB_USER="${DEVICE_INGESTION_MIGRATOR_ROLE:-svc_device_ingestion_migrator}"
-DB_PASSWORD="${DEVICE_INGESTION_MIGRATOR_PASSWORD:-dev_device_ingestion_migrator}"
+APP_USER="${DEVICE_INGESTION_APP_ROLE:-svc_device_ingestion_app}"
+APP_PASSWORD="${DEVICE_INGESTION_APP_PASSWORD:-dev_device_ingestion_app}"
+MIGRATOR_USER="${DEVICE_INGESTION_MIGRATOR_ROLE:-svc_device_ingestion_migrator}"
+MIGRATOR_PASSWORD="${DEVICE_INGESTION_MIGRATOR_PASSWORD:-dev_device_ingestion_migrator}"
 
-export DEVICE_INGESTION_TEST_POSTGRES_DSN="postgresql://${DB_USER}:${DB_PASSWORD}@${DB_HOST}:${DB_PORT}/${DB_NAME}"
+export DEVICE_INGESTION_MIGRATOR_DSN="postgresql://${MIGRATOR_USER}:${MIGRATOR_PASSWORD}@${DB_HOST}:${DB_PORT}/${DB_NAME}"
+./scripts/migrate_postgres.sh upgrade head
+
+export DEVICE_INGESTION_TEST_POSTGRES_DSN="postgresql://${APP_USER}:${APP_PASSWORD}@${DB_HOST}:${DB_PORT}/${DB_NAME}"
 pytest -m postgres_integration -q

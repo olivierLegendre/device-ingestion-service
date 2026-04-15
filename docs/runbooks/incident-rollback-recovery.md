@@ -14,8 +14,15 @@ Critical path: MQTT ingest, normalization, persistence, dead-letter routing.
 ## Rollback
 
 1. Re-deploy last known good release artifact for `device-ingestion-service`.
-2. Restart ingest worker process after API is healthy.
-3. Keep worker paused until validation checks pass.
+2. If incident root cause includes schema drift, rollback one migration step with migrator role:
+
+```bash
+export DEVICE_INGESTION_MIGRATOR_DSN='postgresql://svc_device_ingestion_migrator:***@<host>:<port>/device_ingestion'
+./scripts/migrate_postgres.sh downgrade -1
+```
+
+3. Restart ingest worker process after API is healthy.
+4. Keep worker paused until validation checks pass.
 
 ## Recovery Validation
 
@@ -26,6 +33,7 @@ ruff check .
 mypy src
 pytest -m "not postgres_integration"
 ./scripts/run_postgres_integration_tests.sh
+./scripts/migrate_postgres.sh current
 python scripts/run_worker.py
 ```
 

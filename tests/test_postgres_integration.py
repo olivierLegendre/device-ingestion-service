@@ -14,7 +14,7 @@ def test_postgres_ingestion_roundtrip(monkeypatch: pytest.MonkeyPatch) -> None:
 
     monkeypatch.setenv("DEVICE_INGESTION_PERSISTENCE_BACKEND", "postgres")
     monkeypatch.setenv("DEVICE_INGESTION_POSTGRES_DSN", dsn)
-    monkeypatch.setenv("DEVICE_INGESTION_POSTGRES_AUTO_INIT", "true")
+    monkeypatch.setenv("DEVICE_INGESTION_POSTGRES_AUTO_INIT", "false")
 
     client = TestClient(create_app())
 
@@ -88,7 +88,7 @@ def test_postgres_dead_letter_scope_isolation(monkeypatch: pytest.MonkeyPatch) -
 
     monkeypatch.setenv("DEVICE_INGESTION_PERSISTENCE_BACKEND", "postgres")
     monkeypatch.setenv("DEVICE_INGESTION_POSTGRES_DSN", dsn)
-    monkeypatch.setenv("DEVICE_INGESTION_POSTGRES_AUTO_INIT", "true")
+    monkeypatch.setenv("DEVICE_INGESTION_POSTGRES_AUTO_INIT", "false")
 
     client = TestClient(create_app())
 

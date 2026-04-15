@@ -36,6 +36,16 @@ export DEVICE_INGESTION_POSTGRES_DSN='postgresql://svc_device_ingestion_app:dev_
 uvicorn device_ingestion_service.main:app --reload
 ```
 
+Schema migration is handled with Alembic (`alembic/` + `scripts/migrate_postgres.sh`).
+`scripts/init_postgres.sql` remains as a bootstrap fallback, but production path should use Alembic upgrades.
+
+Apply migrations (migrator role):
+
+```bash
+export DEVICE_INGESTION_MIGRATOR_DSN='postgresql://svc_device_ingestion_migrator:dev_device_ingestion_migrator@localhost:55440/device_ingestion'
+./scripts/migrate_postgres.sh upgrade head
+```
+
 ## Run MQTT Worker
 
 ```bash
@@ -70,6 +80,7 @@ Shared Postgres dependency:
 
 - The integration script uses `platform-foundation` shared cluster provisioning (no local per-service Postgres container).
 - Optional env override: `POSTGRES_SHARED_ENV_FILE=/path/to/postgres-shared.env`.
+- Integration flow now applies Alembic migrations with the migrator role, then runs tests with the app role DSN.
 
 Golden compatibility fixture regression:
 
